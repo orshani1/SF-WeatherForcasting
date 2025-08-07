@@ -1,56 +1,77 @@
 public with sharing class LWC_RecordWeatherForcastingCtrl {
-    
+
     @AuraEnabled(cacheable=true)
-    public static String getWeatherForecast(String recordId,Integer numOfDays){
+    public static String getWeatherForecast(String recordId, Integer numOfDays) {
+            
+        SObject record = fetchRecordWithCoordinates(recordId);
+        if (record == null) return null;
+
+        ExternalService.WeatherAPI.getForecast_Request request = buildForecastRequest(recordId, record, numOfDays);
+        ExternalService.WeatherAPI service = new ExternalService.WeatherAPI();
+        System.debug('## req =  ' + request);
+        ExternalService.WeatherAPI.getForecast_Response response = service.getForecast(request);
+
+        System.debug('### res = ' + JSON.serialize(response.Code200.forecast.forecastday));
+        return JSON.serialize(response.Code200);
+      
+    }
+
+    private static SObject fetchRecordWithCoordinates(String recordId) {
         
-        try {    
-            
-            ExternalService.WeatherAPI service = new ExternalService.WeatherAPI();
-            ExternalService.WeatherAPI.getForecast_Request  req = new ExternalService.WeatherAPI.getForecast_Request();
-            Callouts_Credentials__c credentials = Callouts_Credentials__c.getValues('WeatherAPI');
-            
+        String sObjectType = String.valueOf(Id.valueOf(recordId).getSObjectType());
 
-            Record_Weather_Location_Fields__mdt weatherFieldMappingMdt = Record_Weather_Location_Fields__mdt.getInstance(String.valueOf(Id.valueOf(recordId).getSobjectType()));
-            if(weatherFieldMappingMdt != null){
-                
-                String query = 'SELECT Id';
+        Record_Weather_Location_Fields__mdt mapping = Record_Weather_Location_Fields__mdt.getInstance(sObjectType);
+        
+        if (mapping == null) return null;
 
-                List<String> fieldsNames = new List<String>{weatherFieldMappingMdt.Latitude_Field_Api_Name__c,
-                                                            weatherFieldMappingMdt.Longitude_Field_Api_Name__c};
-                
-                for(String fieldName:fieldsNames){
-                    query += ',' + fieldName; 
-                }
+        List<String> fieldNames = new List<String>{
+            mapping.Latitude_Field_Api_Name__c,
+            mapping.Longitude_Field_Api_Name__c
+        };
 
-                Map<String, Object> bindMap = new Map<String, Object>{'recordId' => recordId};
-
-                Sobject record = 
-                Database.queryWithBinds(query,
-                                        bindMap, 
-                                        AccessLevel.USER_MODE);
-                
-                if(record != null){
-                    
-                    req.key = credentials.API_Key__c;
-                    req.days = numOfDays;
-                    
-                    for(String fieldName : fieldsNames){
-                        req.q += fieldsNames.indexOf(fieldName) == fieldsNames.size() - 1 ? fieldName : fieldName + ',';
-                    }
-                    
-
-                    ExternalService.WeatherAPI.getForecast_Response   res = service.getForecast(req);
-                    ExternalService.WeatherAPI_ForecastResponse forecast = res.Code200; 
-                    
-                    System.debug('### res =  ' + forecast.forecast.forecastday[0].day.condition);
-                    
-                }
-                
-            }
-
-            return null;
-        } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
+        Map<String, Object> bindMap = new Map<String, Object>{ 'recordId' => recordId };
+        
+        String query = 'SELECT Id';
+        
+        for (String field : fieldNames) {
+            query += ', ' + field;
         }
+
+        query += ' FROM ' + sObjectType + ' WHERE Id =:recordId';
+
+        return Database.queryWithBinds(query, bindMap, AccessLevel.USER_MODE);
+    }
+
+    private static ExternalService.WeatherAPI.getForecast_Request buildForecastRequest(String recordId, SObject record, Integer numOfDays) {
+       
+        String sObjectType = String.valueOf(Id.valueOf(recordId).getSObjectType());
+
+        Record_Weather_Location_Fields__mdt mapping = Record_Weather_Location_Fields__mdt.getInstance(sObjectType);
+
+        List<String> fieldNames = new List<String>{
+            mapping.Latitude_Field_Api_Name__c,
+            mapping.Longitude_Field_Api_Name__c
+        };
+
+        String locationQuery = '';
+
+        for (Integer i = 0; i < fieldNames.size(); i++) {
+
+            String fieldName = fieldNames[i];
+            locationQuery += record.get(fieldName);
+
+            if (i < fieldNames.size() - 1) {
+                locationQuery += ',';
+            }
+        }
+
+        Callouts_Credentials__c credentials = Callouts_Credentials__c.getValues('WeatherAPI');
+
+        ExternalService.WeatherAPI.getForecast_Request req = new ExternalService.WeatherAPI.getForecast_Request();
+        req.key = credentials.API_Key__c;
+        req.days = numOfDays;
+        req.q = locationQuery;
+
+        return req;
     }
 }

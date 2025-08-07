@@ -1,0 +1,11 @@
+<template>
+    <template if:true={forcastDaysArray}>
+        <div class="table">
+            <template for:each={forcastDaysArray} for:item="forcastDay">
+                <div  key={forcastDay.z0date} class="table-row">
+                    <p>{forcastDay.day.condition.text}</p>
+                </div>
+            </template>
+        </div>
+    </template>
+</template>

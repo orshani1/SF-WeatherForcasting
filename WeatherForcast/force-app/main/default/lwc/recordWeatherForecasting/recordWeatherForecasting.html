@@ -1,3 +1,6 @@
 <template>
-    
+        <template if:true={currentForecast}>
+            <c-weather-forecast-detail forecast={forecastObj} forecast-day={currentForecast} forecast-days-array={forecastDaysArray}></c-weather-forecast-detail>
+        </template>
+
 </template>
