@@ -2,8 +2,24 @@
     <template if:true={forcastDaysArray}>
         <div class="table">
             <template for:each={forcastDaysArray} for:item="forcastDay">
-                <div  key={forcastDay.z0date} class="table-row">
-                    <p>{forcastDay.day.condition.text}</p>
+                <div  key={forcastDay.z0date} class={forcastDay.day.condition.class} onclick={handleDaySelection}>
+                    <div>
+                        <img src={forcastDay.day.condition.icon} alt="">
+                    </div>
+                    <div class="left-section">
+                        <div>
+                            <p>{forcastDay.z0date}</p>
+                        </div>
+                        <div>
+                            <p>{forcastDay.day.mintempx5fc} - {forcastDay.day.maxtempx5fc}c</p>
+                        </div>                        
+                    </div>
+                    <div>
+                        <p>{forcastDay.day.condition.text}</p>
+                    </div>
+            
+                
+                    
                 </div>
             </template>
         </div>

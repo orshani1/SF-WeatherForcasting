@@ -1,0 +1,47 @@
+.table{
+    display: flex;
+    flex-direction: column;
+    gap: 5%;
+}
+.table-row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color:white;
+    padding: 1vh;
+    cursor: pointer;
+    transition: transform 200ms all;
+    box-shadow: 0 0 30px -8px rgba(-1, 0, 0, 0.5);
+    border-radius: 7px;
+    height: 5vh;
+
+
+}
+
+.left-section{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.table-row:hover{
+    transform: scale(1.05);
+}
+
+.table-row:active{
+    transform: scale(1);
+}
+
+.blue {
+    background: linear-gradient(90deg,rgba(83, 137, 237, 1) 0%, rgb(89, 144, 226) 50%, rgba(83, 137, 237, 1) 100%);
+}
+
+
+.gray { 
+    background: linear-gradient(90deg,rgba(71, 71, 71, 1) 0%, rgb(62, 82, 92) 50%, rgba(82, 82, 82, 1) 100%);
+}
+
+.orange{
+    background: linear-gradient(90deg,rgba(255, 153, 0, 1) 0%, rgba(245, 167, 59, 1) 50%, rgba(255, 153, 0, 1) 100%);
+}
+
