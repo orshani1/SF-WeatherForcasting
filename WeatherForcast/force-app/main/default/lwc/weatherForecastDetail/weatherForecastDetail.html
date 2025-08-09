@@ -1,14 +1,14 @@
 <template>
-    <template if:true={isDayRendered}>
-        <div class="card">
-            
+            <div>
+                <p class="title">Weather Detail View</p>            
+            </div>
             <div class="grid">
 
                 <div class="flex-cloumn">
                     
                     <div>
                         <img src={forecastDay.day.condition.icon}  class="main-icon">
-                        <p class="temp-label">{forecastDay.day.maxtempx5fc} <span class="tempeture-symbol">c</span></p>                        
+                        <p class="temp-label">{forecastDay.day.maxtemp} <span class="tempeture-symbol">c</span></p>                        
                         <div class="text-wrapper">
                             <span><img src={forecastDay.day.condition.icon}></span> <p>{forecastDay.day.condition.text}</p>
 
@@ -16,10 +16,10 @@
                         
                         <div class="location-calender-wrapper">
                             <div class="flex">
-                                <img class="footer-icon" src={locationIcon}><p>{forecast.location.tzx5fid} - {forecast.location.name} , {forecast.location.country} </p>
+                                <img class="footer-icon" src={locationIcon}><p>{forecast.location.tz_id} - {forecast.location.name} , {forecast.location.country} </p>
                             </div>
                             <div class="flex">
-                                <img src={calenderIcon} class="footer-icon"><p>{forecastDay.z0date}</p>
+                                <img src={calenderIcon} class="footer-icon"><p>{forecastDay.forecastDate}</p>
                             </div>    
                         </div>
                         
@@ -28,21 +28,13 @@
                 </div>                  
                 
                 <div class="flex-column center">
-                    <p class="temp-label">Wind Status:</p>
                     <img src={weatherWindIcon} class="main-icon">
-                    <p class="temp-label">{forecastDay.day.maxwindx5fmph} mph</p>
+                    <p class="wind-temp-label">Wind Status:{forecastDay.day.maxwind} mph</p>
+                    <p class="wind-temp-label">Humidity : {forecastDay.day.avghumidity} %</p>
                 </div>
 
             </div>
                 
-          
-            <div class="seperator"></div>
             
-            <div class="table-wrapper">
-                <c-weather-forecasting-table forcast-days-array={forecastDaysArray}></c-weather-forecasting-table>
-            </div>
-        </div>
-            
-    </template>
     
 </template>

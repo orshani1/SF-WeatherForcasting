@@ -1,25 +1,26 @@
 <template>
     <template if:true={forcastDaysArray}>
+        <div class="title-wrapper">
+            <p class="title">Weather Weekly View</p>
+        </div>
         <div class="table">
-            <template for:each={forcastDaysArray} for:item="forcastDay">
-                <div  key={forcastDay.z0date} class={forcastDay.day.condition.class} onclick={handleDaySelection}>
+            <template  for:each={forcastDaysArray} for:item="forcastDay">
+                <div  key={forcastDay.forecastDate} data-id={forcastDay.forecastDate} class={forcastDay.day.condition.class} onclick={handleDaySelection}>
                     <div>
                         <img src={forcastDay.day.condition.icon} alt="">
                     </div>
                     <div class="left-section">
                         <div>
-                            <p>{forcastDay.z0date}</p>
+                            <p>{forcastDay.forecastDate}</p>
                         </div>
                         <div>
-                            <p>{forcastDay.day.mintempx5fc} - {forcastDay.day.maxtempx5fc}c</p>
+                            <p>{forcastDay.day.mintemp} - {forcastDay.day.maxtemp}c</p>
                         </div>                        
                     </div>
                     <div>
                         <p>{forcastDay.day.condition.text}</p>
                     </div>
             
-                
-                    
                 </div>
             </template>
         </div>

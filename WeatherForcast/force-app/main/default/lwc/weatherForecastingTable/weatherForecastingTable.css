@@ -1,7 +1,8 @@
 .table{
     display: flex;
     flex-direction: column;
-    gap: 5%;
+    gap: 2%;
+    height: 40vh;
 }
 .table-row{
     display: flex;
@@ -45,3 +46,12 @@
     background: linear-gradient(90deg,rgba(255, 153, 0, 1) 0%, rgba(245, 167, 59, 1) 50%, rgba(255, 153, 0, 1) 100%);
 }
 
+.title {
+    font-size: 30px;
+    font-weight: bold;
+
+}
+
+.title-wrapper{
+    margin-bottom: 2vh;
+}

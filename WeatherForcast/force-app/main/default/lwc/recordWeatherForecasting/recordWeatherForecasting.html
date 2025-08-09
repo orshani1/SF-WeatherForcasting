@@ -1,6 +1,23 @@
 <template>
-        <template if:true={currentForecast}>
-            <c-weather-forecast-detail forecast={forecastObj} forecast-day={currentForecast} forecast-days-array={forecastDaysArray}></c-weather-forecast-detail>
+        <template if:true={dataReady}>
+            <div class="card">
+                
+                <div class="detail-wrapper">
+                    <c-weather-forecast-detail forecast={forecastObj} forecast-day={currentForecast} forecast-days-array={forecastDaysArray}></c-weather-forecast-detail>
+                </div>
+    
+                <div class="seperator"></div>
+                
+                <div class="table-wrapper">
+                    <c-weather-forecasting-table forcast-days-array={forecastDaysArray} onselect={handleSelect}></c-weather-forecasting-table>
+                </div>
+                
+
+            </div>
+
         </template>
 
+   
+
+        
 </template>

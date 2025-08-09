@@ -8,25 +8,31 @@ export default class WeatherForecastingTable extends LightningElement {
         this.forcastDaysArray = await this.forcastDaysArray.map(forecastDay =>{
             return {...forecastDay,
                         day:{
-                            mintempx5fc:forecastDay.day.mintempx5fc,
-                            maxtempx5fc:forecastDay.day.mintempx5fc,
+                            mintempx5fc:forecastDay.day.mintemp,
+                            maxtempx5fc:forecastDay.day.maxtemp,
                             condition:{
                                 ...forecastDay.day.condition,
-                                class:(forecastDay.day.condition.text.includes('Cloudy') ? 'table-row blue' : forecastDay.day.condition.text.includes('Sunny') ? 'table-row orange' : 'table-row gray')
+                                class:(forecastDay?.day?.condition?.text?.includes('Cloudy') ? 'table-row blue' : forecastDay?.day?.condition?.text?.includes('Sunny') ? 'table-row orange' : 'table-row gray')
                             }
                         }
             
             };
         });
     }
+    
 
     handleDaySelection(e){
-        debugger;
-        console.log('e = ' + JSON.stringify(e.detail));
-        console.log('e target = ' + JSON.stringify(e.target));
-        debugger;
-
         
+        const key = e.currentTarget.dataset.id;
+        const selectedDay = this.forcastDaysArray.filter(d=>d.forecastDate == key);
+        
+        const selectEvent = new CustomEvent('select',{
+            detail:{
+                forecastDay:selectedDay    
+            }
+        });
+
+        this.dispatchEvent(selectEvent);
     }
 
 }
