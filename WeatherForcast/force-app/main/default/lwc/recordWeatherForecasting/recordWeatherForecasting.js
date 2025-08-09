@@ -2,10 +2,7 @@ import { LightningElement, api, track, wire }   from 'lwc';
 import { getRecord }                            from 'lightning/uiRecordApi';
 import getForecastImperative                    from '@salesforce/apex/WeatherForecastService.getForecastImperative';
 
-import SHIPPING_LATITUDE                        from '@salesforce/schema/Account.ShippingLatitude';
-import SHIPPING_LONGITUDE                       from '@salesforce/schema/Account.ShippingLongitude';
-import getMappingFields                               from '@salesforce/apex/WeatherForecastService.getMappingFields';
-const FIELDS = [SHIPPING_LATITUDE, SHIPPING_LONGITUDE];
+import getMappingFields                         from '@salesforce/apex/WeatherForecastService.getMappingFields';
 
 export default class RecordWeatherForecasting extends LightningElement {
   
