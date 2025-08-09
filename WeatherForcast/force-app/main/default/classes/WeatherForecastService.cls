@@ -14,7 +14,7 @@ public with sharing class WeatherForecastService {
                 return error('Record has no coordinates');
             }
 
-            String endpoint = buildEndpoint(coords, numOfDays);
+            String endpoint =  buildEndpoint(coords, numOfDays);
             HttpResponse res = performCallout(endpoint);
 
             if (res == null) return error('No response from weather service');
