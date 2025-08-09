@@ -2,10 +2,10 @@ import { LightningElement, api, track, wire }   from 'lwc';
 import { getRecord }                            from 'lightning/uiRecordApi';
 import getForecastImperative                    from '@salesforce/apex/WeatherForecastService.getForecastImperative';
 
-import LATITUDE_FIELD                           from '@salesforce/schema/Account.BillingLatitude';
-import LONGITUDE_FIELD                          from '@salesforce/schema/Account.BillingLongitude';
-
-const FIELDS = [LATITUDE_FIELD, LONGITUDE_FIELD];
+import SHIPPING_LATITUDE                        from '@salesforce/schema/Account.ShippingLatitude';
+import SHIPPING_LONGITUDE                       from '@salesforce/schema/Account.ShippingLongitude';
+import getMappingFields                               from '@salesforce/apex/WeatherForecastService.getMappingFields';
+const FIELDS = [SHIPPING_LATITUDE, SHIPPING_LONGITUDE];
 
 export default class RecordWeatherForecasting extends LightningElement {
   
@@ -16,7 +16,20 @@ export default class RecordWeatherForecasting extends LightningElement {
     @track days =         [];              
     @track currentDay =   null;      
 
-    @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
+
+    @track dynamicFields = []; 
+
+
+    @wire(getMappingFields, { recordId: '$recordId' })
+    async wiredFields({ data, error }) {
+        if (data) {
+            this.dynamicFields = await data;
+        } else if (error) {
+            console.error(error);
+        }
+    }
+
+    @wire(getRecord, { recordId: '$recordId', fields:'$dynamicFields'})
     async handleRecord({ data, error }) {
 
         if (error) { this.state = { loading:false, error: 'Record load failed' }; return; }

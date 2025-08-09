@@ -6,11 +6,10 @@ public with sharing class WeatherForecastService {
         try {
             String sObjectType = String.valueOf(recordId.getSObjectType());
 
-            Record_Weather_Location_Fields__mdt mapping = getMapping(sObjectType);
+            Record_Weather_Location_Fields__mdt mapping = getMapping(recordId);
             if (mapping == null) return error('Missing metadata mapping for ' + sObjectType);
-
             Coordinates coords = getCoordinates(recordId, mapping, sObjectType);
-            
+
             if (coords == null || coords.lat == null || coords.lon == null) {
                 return error('Record has no coordinates');
             }
@@ -40,9 +39,21 @@ public with sharing class WeatherForecastService {
     }
 
 
-    private static Record_Weather_Location_Fields__mdt getMapping(String sObjectType) {
-        return Record_Weather_Location_Fields__mdt.getInstance(sObjectType);
+    
+    private static Record_Weather_Location_Fields__mdt getMapping(Id recordId) {
+        return Record_Weather_Location_Fields__mdt.getInstance(String.valueOf(recordId.getSObjectType()));
+    
     }
+
+    @AuraEnabled(cacheable=true)
+    public static List<String> getMappingFields(Id recordId){
+        Record_Weather_Location_Fields__mdt mdt = Record_Weather_Location_Fields__mdt.getInstance(String.valueOf(recordId.getSobjectType()));
+        return new List<String> {mdt.Latitude_Field_Api_Name__c,mdt.Longitude_Field_Api_Name__c};
+        
+
+    }
+
+    
 
     private class Coordinates {
         public String lat;
