@@ -2,6 +2,7 @@
 
 This repository contains my Salesforce home assignment implementation for showing **tomorrow’s weather** on a record page.
 
+
 ## Key Points in My Approach
 
 1. **Generic & Reusable Design**  
@@ -20,3 +21,15 @@ This repository contains my Salesforce home assignment implementation for showin
    - The API response contains keys that are **invalid identifiers in Apex** (e.g., `date`, `maxtemp__c`, `mintemp__c` — where `__c` indicates Celsius; similar keys exist with `__f` for Fahrenheit).  
    - This required me to **manually map** these keys to my model, making the service class more verbose.  
    - If the API had valid key names, the code would be **simpler and shorter**.
+
+
+
+
+## How to use 
+    the LWC component is already placed in Account record Page , the event which trigger its refresh is changes in the Account "ShippingAddress" Field , if you want to see other object behavior you will need to : 
+1.  Place the LWC Component on the record Record Page
+
+2.  Add new Member to Record_Weather_Location_Fields__mdt Custom metadata
+
+
+## MAKE SURE YOU CHANGE ALL OF ADDRESS FIELDS , IF YOU ONLY CHANGE ONE (e.g ZipCode) AND NOT THE REST THE API WILL NOT DISPLAY A NEW LOCATION 
