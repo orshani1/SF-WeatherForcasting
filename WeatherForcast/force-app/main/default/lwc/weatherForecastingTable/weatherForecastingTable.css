@@ -8,8 +8,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color:white;
-    padding: 1vh;
+    color: white;
+    padding: 5% 10%;
     cursor: pointer;
     transition: transform 200ms all;
     box-shadow: 0 0 30px -8px rgba(-1, 0, 0, 0.5);
@@ -54,4 +54,10 @@
 
 .title-wrapper{
     margin-bottom: 2vh;
+}
+
+.flex-center{
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

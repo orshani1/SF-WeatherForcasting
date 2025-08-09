@@ -1,6 +1,6 @@
 public with sharing class WeatherForecastService {
     
-    @AuraEnabled(cacheable=true)
+    @AuraEnabled(cacheable=false)
     public static String getWeatherForecast(String recordId,String numOfDays){
 
         

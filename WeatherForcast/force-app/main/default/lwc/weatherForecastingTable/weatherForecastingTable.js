@@ -8,8 +8,8 @@ export default class WeatherForecastingTable extends LightningElement {
         this.forcastDaysArray = await this.forcastDaysArray.map(forecastDay =>{
             return {...forecastDay,
                         day:{
-                            mintempx5fc:forecastDay.day.mintemp,
-                            maxtempx5fc:forecastDay.day.maxtemp,
+                            mintemp:forecastDay.day.mintemp,
+                            maxtemp:forecastDay.day.maxtemp,
                             condition:{
                                 ...forecastDay.day.condition,
                                 class:(forecastDay?.day?.condition?.text?.includes('Cloudy') ? 'table-row blue' : forecastDay?.day?.condition?.text?.includes('Sunny') ? 'table-row orange' : 'table-row gray')

@@ -10,7 +10,7 @@
                         <img src={forecastDay.day.condition.icon}  class="main-icon">
                         <p class="temp-label">{forecastDay.day.maxtemp} <span class="tempeture-symbol">c</span></p>                        
                         <div class="text-wrapper">
-                            <span><img src={forecastDay.day.condition.icon}></span> <p>{forecastDay.day.condition.text}</p>
+                            <span><img src={forecastDay.day.condition.icon}></span> <p style="align-self: center;">{forecastDay.day.condition.text}</p>
 
                         </div>
                         
@@ -28,9 +28,11 @@
                 </div>                  
                 
                 <div class="flex-column center">
-                    <img src={weatherWindIcon} class="main-icon">
+
+                    <img src={weatherWindIcon} class="semi-icon">
                     <p class="wind-temp-label">Wind Status:{forecastDay.day.maxwind} mph</p>
                     <p class="wind-temp-label">Humidity : {forecastDay.day.avghumidity} %</p>
+                
                 </div>
 
             </div>
