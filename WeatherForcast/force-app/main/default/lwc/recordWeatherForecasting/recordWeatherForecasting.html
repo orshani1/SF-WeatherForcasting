@@ -1,23 +1,38 @@
 <template>
-        <template if:true={dataReady}>
-            <div class="card">
-                
-                <div class="detail-wrapper">
-                    <c-weather-forecast-detail forecast={forecastObj} forecast-day={currentForecast} forecast-days-array={forecastDaysArray}></c-weather-forecast-detail>
-                </div>
-    
-                <div class="seperator"></div>
-                
-                <div class="table-wrapper">
-                    <c-weather-forecasting-table forcast-days-array={forecastDaysArray} onselect={handleSelect}></c-weather-forecasting-table>
-                </div>
-                
 
+    <template if:true={state.loading}>
+        <lightning-spinner alternative-text="Loading weather"></lightning-spinner>
+    </template>
+
+    <template if:true={state.error}>
+        <div class="slds-box slds-theme_error slds-m-bottom_small">{state.error}</div>
+    </template>
+
+    <template if:true={dataReady}>
+        
+        <div class="card" aria-live="polite">
+        
+            <div class="detail-wrapper">
+                <c-weather-forecast-detail
+                forecast={forecast}
+                forecast-day={currentDay}
+                forecast-days-array={days}>
+                </c-weather-forecast-detail>
             </div>
 
-        </template>
+            <div class="seperator"></div>
 
-   
+            <div class="table-wrapper">
+               
+                <c-weather-forecasting-table
+                days={days}
+                onforecastselect={handleForecastSelect}>
+                </c-weather-forecasting-table>
+            
+            </div>
+            
+        </div>
 
-        
+    </template>
+
 </template>

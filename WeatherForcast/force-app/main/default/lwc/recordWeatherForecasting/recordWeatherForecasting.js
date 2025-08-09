@@ -1,41 +1,55 @@
-import { api, LightningElement,wire,track } from 'lwc';
-import getWeatherForecast                   from '@salesforce/apex/WeatherForecastService.getWeatherForecast';
+import { LightningElement, api, track, wire }   from 'lwc';
+import { getRecord }                            from 'lightning/uiRecordApi';
+import getForecastImperative                    from '@salesforce/apex/WeatherForecastService.getForecastImperative';
+
+import LATITUDE_FIELD                           from '@salesforce/schema/Account.BillingLatitude';
+import LONGITUDE_FIELD                          from '@salesforce/schema/Account.BillingLongitude';
+
+const FIELDS = [LATITUDE_FIELD, LONGITUDE_FIELD];
 
 export default class RecordWeatherForecasting extends LightningElement {
-    
+  
     @api recordId;
 
-    @track forecastDaysArray = [];
+    @track state =        { loading: true, error: null };
+    @track forecast =     null;        
+    @track days =         [];              
+    @track currentDay =   null;      
 
-    @track currentForecast = {};
-    
-    @track forecastObj = {};
-    
-   
-    @track dataReady = false;
+    @wire(getRecord, { recordId: '$recordId', fields: FIELDS })
+    async handleRecord({ data, error }) {
 
-    @wire(getWeatherForecast, { recordId: "$recordId", numOfDays: 7 })
-    forecastWeather({ error, data }) {
-       
-        if (data) {
-            const parsedData = JSON.parse(data);
-            const days = parsedData?.forecast?.forecastday;
+        if (error) { this.state = { loading:false, error: 'Record load failed' }; return; }
 
-            this.forecastDaysArray = days;
-            this.currentForecast = days[0];
-            this.forecastObj = parsedData;
-          
-            this.dataReady = true;
+        if (!data)  return;
+
+        
+        this.state = { loading: true, error: null };
+
+        let res = await getForecastImperative({ recordId: this.recordId, numOfDays: 7 });
+        res = JSON.parse(res);
+        
+        
+        if (!res || res.status !== 'OK') {
+            this.state = { loading:false, error: (res && res.message) || 'Service error' };
+            return;
         }
+
+        this.forecast = res;
+        this.days = res?.forecast?.forecastday || [];
+
+        const nowSec = Math.floor(Date.now() / 1000);
+        const tomorrow = this.days.find(d => d.date_epoch > nowSec) || this.days[1] || this.days[0];
+
+        this.currentDay = tomorrow;
+
+        this.state = { loading:false, error: null };
     }
-    
 
 
-
-
-    handleSelect(e){
-        this.currentForecast = this.forecastDaysArray.filter(d=> d.forecastDate == e.detail.forecastDay[0].forecastDate)[0];
+    handleForecastSelect(evt) {
+        this.currentDay = evt.detail.day;
     }
 
-
+    get dataReady() { return !this.state.loading && !this.state.error && this.currentDay; }
 }

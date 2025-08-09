@@ -1,95 +1,169 @@
 public with sharing class WeatherForecastService {
-    
-    @AuraEnabled(cacheable=false)
-    public static String getWeatherForecast(String recordId,String numOfDays){
 
-        
-        String q = '';
+    @AuraEnabled
+    public static String getForecastImperative(Id recordId, Integer numOfDays) {
 
-        String sObjectType = String.valueOf(Id.valueOf(recordId).getSObjectType());
-        Record_Weather_Location_Fields__mdt mapping = Record_Weather_Location_Fields__mdt.getInstance(sObjectType);
-        
-        SObject obj = fetchRecordWithCoordinates(recordId,mapping,sObjectType);
-        q += obj.get(mapping.Latitude_Field_Api_Name__c) + ',' + obj.get(mapping.Longitude_Field_Api_Name__c);
+        try {
+            String sObjectType = String.valueOf(recordId.getSObjectType());
 
+            Record_Weather_Location_Fields__mdt mapping = getMapping(sObjectType);
+            if (mapping == null) return error('Missing metadata mapping for ' + sObjectType);
 
-        return JSON.serialize(callService(q, numOfDays));
+            Coordinates coords = getCoordinates(recordId, mapping, sObjectType);
+            
+            if (coords == null || coords.lat == null || coords.lon == null) {
+                return error('Record has no coordinates');
+            }
+
+            String endpoint = buildEndpoint(coords, numOfDays);
+            HttpResponse res = performCallout(endpoint);
+
+            if (res == null) return error('No response from weather service');
+            
+            if (res.getStatusCode() != 200) {
+                return error('HTTP ' + res.getStatusCode() + ': ' + res.getStatus());
+            }
+
+            WeatherForcastModel model = deserializeTyped(res);
+
+            normalizeInvalidIdentifiers(model, res);
+            
+            orderForecastDays(model);
+            
+            model.status = 'OK';
+            
+            return  JSON.serialize(model);
+
+        } catch (Exception e) {
+            return error(e.getMessage());
+        }
     }
 
-    public static WeatherForcastModel callService(String q,String numOfDays){
+
+    private static Record_Weather_Location_Fields__mdt getMapping(String sObjectType) {
+        return Record_Weather_Location_Fields__mdt.getInstance(sObjectType);
+    }
+
+    private class Coordinates {
+        public String lat;
+        public String lon;
+        public Coordinates(String lat, String lon) {
+            this.lat = lat; this.lon = lon;
+        }
+    }
+
+    private static Coordinates getCoordinates(Id recordId, Record_Weather_Location_Fields__mdt m, String sObjectType) {
         
-        Http http = new Http();
+        SObject rec = fetchRecordWithCoordinates(recordId, m, sObjectType);
+        
+        if (rec == null) return null;
+        
+        String lat = String.valueOf(rec.get(m.Latitude_Field_Api_Name__c));
+        String lon = String.valueOf(rec.get(m.Longitude_Field_Api_Name__c));
+        
+        return new Coordinates(lat, lon);
+    }
+
+    private static SObject fetchRecordWithCoordinates(Id recordId, Record_Weather_Location_Fields__mdt m, String sObjectType) {
+        
+        String soql = 'SELECT Id,' + m.Latitude_Field_Api_Name__c + ',' + m.Longitude_Field_Api_Name__c +
+                      ' FROM ' + sObjectType + ' WHERE Id = :recordId';
+        
+        return Database.queryWithBinds(soql, new Map<String,Object>{ 'recordId' => recordId }, AccessLevel.USER_MODE);
+    }
+
+
+    private static String buildEndpoint(Coordinates c, Integer numOfDays) {
+        String q = c.lat + ',' + c.lon;
+        String apiKey = Callouts_Credentials__c.getValues('WeatherAPI').API_Key__c;
+
+        return 'callout:Weather_API/v1/forecast.json?key=' + apiKey +
+               '&q=' + EncodingUtil.urlEncode(q, 'UTF-8') +
+               '&days=' + String.valueOf(numOfDays);
+    }
+
+    private static HttpResponse performCallout(String endpoint) {
+
         HttpRequest req = new HttpRequest();
-        HttpResponse res;
-        
-        req.setEndpoint('callout:Weather_API/v1/forecast.json?key=' + Callouts_Credentials__c.getValues('WeatherAPI').API_Key__c + '&q=' + q + '&days='+numOfDays);
+
+        req.setEndpoint(endpoint);
         req.setMethod('GET');
         req.setHeader('Content-Type', 'application/json');
-        
-        res = http.send(req);
+        req.setTimeout(10000);
 
-        WeatherForcastModel model =(WeatherForcastModel) JSON.deserialize(res.getBody(),WeatherForcastModel.class);
-        model = fillModelInvalidIdentifiers(model, res);
-
-        
-    
-        return model;
+        return new Http().send(req);
     }
 
-    private static WeatherForcastModel fillModelInvalidIdentifiers(WeatherForcastModel model, HttpResponse res){
+
+    private static WeatherForcastModel deserializeTyped(HttpResponse res) {
+        return (WeatherForcastModel) JSON.deserialize(res.getBody(), WeatherForcastModel.class);
+    }
+
+    private static void normalizeInvalidIdentifiers(WeatherForcastModel model, HttpResponse res) {
+
+        Map<String, Object> body = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+
+        if (body == null) return;
+
+        Map<String, Object> forecastMap = (Map<String, Object>) body.get('forecast');
+        if (forecastMap == null) return;
+
+        List<Object> rawDays = (List<Object>) forecastMap.get('forecastday');
+        if (rawDays == null || model == null || model.forecast == null || model.forecast.forecastday == null) return;
+
+        Map<String, WeatherForcastModel.ForecastDay> epochDateToForecastMap = new Map<String, WeatherForcastModel.ForecastDay>();
         
-        Map<String, Object> bodyMap =       (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
-        Map<String, Object> forecastMap =   (Map<String, Object>) bodyMap.get('forecast');
-
-        List<Object> forecastDays =         (List<Object>) forecastMap.get('forecastday');
-
-        Map<String, WeatherForcastModel.ForecastDay> dateToDayMap = new Map<String, WeatherForcastModel.ForecastDay>();
-
-        for (WeatherForcastModel.ForecastDay foreCastDay : model.forecast.forecastday) {
-            dateToDayMap.put(String.valueOf(foreCastDay.date_epoch), foreCastDay);
+        for (WeatherForcastModel.ForecastDay d : model.forecast.forecastday) {
+            epochDateToForecastMap.put(String.valueOf(d.date_epoch), d);
         }
 
-       for (Object obj : forecastDays) {
-            Map<String, Object> forecastDayMap = (Map<String, Object>) obj;
-            String epochStr = String.valueOf(forecastDayMap.get('date_epoch'));
+        for (Object o : rawDays) {
+            Map<String, Object> fd = (Map<String, Object>) o;
+            String epochStr = String.valueOf(fd.get('date_epoch'));
+            if (!epochDateToForecastMap.containsKey(epochStr)) continue;
 
-            if (dateToDayMap.containsKey(epochStr)) {
-                WeatherForcastModel.ForecastDay forecastDay = dateToDayMap.get(epochStr);
+            WeatherForcastModel.ForecastDay tgt = epochDateToForecastMap.get(epochStr);
+            tgt.forecastDate = (String) fd.get('date');
 
-                Map<String, Object> rawDayMap = (Map<String, Object>) forecastDayMap.get('day');
-
-                forecastDay.forecastDate = (String) forecastDayMap.get('date');
-                forecastDay.day.maxtemp = (Decimal) rawDayMap.get('maxtemp_c');
-                forecastDay.day.mintemp = (Decimal) rawDayMap.get('mintemp_c'); 
-                forecastDay.day.maxwind = (Decimal) rawDayMap.get('maxwind_mph'); 
+            Map<String, Object> day = (Map<String, Object>) fd.get('day');
+            if (day != null && tgt.day != null) {
+                tgt.day.maxtemp    = (Double) day.get('maxtemp_c');
+                tgt.day.mintemp    = (Double) day.get('mintemp_c');
+                tgt.day.maxwind    = (Double) day.get('maxwind_mph');
+                tgt.day.avghumidity= (Integer) day.get('avghumidity');
             }
         }
-
-
-        model.forecast.forecastday = dateToDayMap.values();
-        return model;
     }
-    
-    private static SObject fetchRecordWithCoordinates(String recordId,Record_Weather_Location_Fields__mdt mapping,String sObjectType) {
-        
-        if (mapping == null) return null;
 
-        List<String> fieldNames = new List<String>{
-            mapping.Latitude_Field_Api_Name__c,
-            mapping.Longitude_Field_Api_Name__c
-        };
 
-        Map<String, Object> bindMap = new Map<String, Object>{ 'recordId' => recordId };
-        
-        String query = 'SELECT Id';
-        
-        for (String field : fieldNames) {
-            query += ', ' + field;
+    private class ForecastDayEpochComparator implements System.Comparator<WeatherForcastModel.ForecastDay> {
+
+        public Integer compare(WeatherForcastModel.ForecastDay a, WeatherForcastModel.ForecastDay b) {
+
+            if (a == null && b == null) return 0;
+            if (a == null) return -1;
+            if (b == null) return 1;
+
+            if (a.date_epoch == b.date_epoch) return 0;
+            return a.date_epoch > b.date_epoch ? 1 : -1;
         }
-
-        query += ' FROM ' + sObjectType + ' WHERE Id =:recordId';
-
-        return Database.queryWithBinds(query, bindMap, AccessLevel.USER_MODE);
     }
-        
+
+    private static void orderForecastDays(WeatherForcastModel model) {
+
+        if (model == null || model.forecast == null || model.forecast.forecastday == null) return;
+
+        model.forecast.forecastday.sort(new WeatherForecastService.ForecastDayEpochComparator());
+
+    }
+
+
+    private static String error(String msg) {
+
+        WeatherForcastModel m = new WeatherForcastModel();
+        m.status  = 'ERROR';
+        m.message = msg;
+        return JSON.serialize(m);
+    }
+
 }

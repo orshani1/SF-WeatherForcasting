@@ -1,30 +1,24 @@
 <template>
-    <template if:true={forcastDaysArray}>
-        <div class="title-wrapper">
-            <p class="title">Weather Weekly View</p>
-        </div>
-        <div class="table">
-            <template  for:each={forcastDaysArray} for:item="forcastDay">
-                <div  key={forcastDay.forecastDate} data-id={forcastDay.forecastDate} class={forcastDay.day.condition.class} onclick={handleDaySelection}>
+    <template if:true={rows}>
+            <div class="title-wrapper">
+                <p class="title">Weather Weekly View</p>
+            </div>
+
+            <div class="table">
+                <template for:each={rows} for:item="d">
+                    <div key={d.date_epoch} data-epoch={d.date_epoch} class={d._rowClass} onclick={handleDaySelection}>
                         <div class="flex-center">
-                                <img src={forcastDay.day.condition.icon} alt="">
-                                <div class="left-section">
-                                    <div>
-                                        <p>{forcastDay.forecastDate}</p>
-                                    </div>
-                                    <div>
-                                        <p>{forcastDay.day.mintemp} - {forcastDay.day.maxtemp}c</p>
-                                    </div>                        
-                                </div>
+
+                            <img src={d.day.condition.icon} alt={d.day.condition.text} />
+                            <div class="left-section">
+                                <div><p>{d.forecastDate}</p></div>
+                                <div><p>{d.day.mintemp} – {d.day.maxtemp} °C</p></div>
+                            </div>
+                            
                         </div>
-                        
-                  
-                    <div>
-                        <p>{forcastDay.day.condition.text}</p>
+                        <div><p>{d.day.condition.text}</p></div>
                     </div>
-            
-                </div>
-            </template>
-        </div>
+                </template>
+            </div>
     </template>
 </template>

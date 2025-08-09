@@ -3,6 +3,8 @@ public with sharing class WeatherForcastModel {
 
     public Location location {get;set;}
     public Forecast forecast {get;set;}
+    public String  status   { get; set; } 
+    public String  message  { get; set; } 
     
     public class Location {
         public String name     {get;set;}

@@ -1,19 +1,23 @@
-import { api, LightningElement, track } from 'lwc';
+import { LightningElement, api } from 'lwc';
+import CAL_ICON                  from '@salesforce/label/c.weather_cal';
+import LOC_ICON                  from '@salesforce/label/c.weather_loc';
+import WIND_ICON                 from '@salesforce/label/c.weather_wind';
 
 export default class WeatherForecastDetail extends LightningElement {
-    
+
     @api forecastDay;
 
     @api forecast;
-
+    
     @api forecastDaysArray;
 
-    calenderIcon = 'https://cdn-icons-png.flaticon.com/512/4744/4744824.png';
+  
+    calenderIcon = CAL_ICON;
+  
+    locationIcon = LOC_ICON;
+  
+    weatherWindIcon = WIND_ICON;
 
-    locationIcon = 'https://cdn-icons-png.flaticon.com/512/535/535239.png';
-
-    weatherWindIcon = 'https://cdn-icons-png.flaticon.com/512/6143/6143028.png';
-
-
-    
+  
+    get tempLabel() { return `${this.forecastDay.day.maxtemp} °C`; }
 }
