@@ -4,18 +4,20 @@ public with sharing class WeatherForecastService {
     public static String getForecastImperative(Id recordId, Integer numOfDays) {
 
         try {
-            String sObjectType = String.valueOf(recordId.getSObjectType());
-
+            String sObjectType                          = String.valueOf(recordId.getSObjectType());
             Record_Weather_Location_Fields__mdt mapping = getMapping(recordId);
+
             if (mapping == null) return error('Missing metadata mapping for ' + sObjectType);
-            Coordinates coords = getCoordinates(recordId, mapping, sObjectType);
+ 
+ 
+            Coordinates coords  = getCoordinates(recordId, mapping, sObjectType);
 
             if (coords == null || coords.lat == null || coords.lon == null) {
                 return error('Record has no coordinates');
             }
 
-            String endpoint =  buildEndpoint(coords, numOfDays);
-            HttpResponse res = performCallout(endpoint);
+            String endpoint     = buildEndpoint(coords, numOfDays);
+            HttpResponse res    = performCallout(endpoint);
 
             if (res == null) return error('No response from weather service');
             
